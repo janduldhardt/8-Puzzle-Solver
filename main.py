@@ -1,4 +1,6 @@
-from puzzlegen import *
+from puzzlegen import generate_puzzle
+import heapq
+
 # algo = 1 #manhattan
 # algo = 2 #RowCOl-dist
 # algo = 3 #Misplaced
@@ -56,8 +58,12 @@ class MyClass:
                 temp = m[row][col]
                 m[row][col] = 0
                 m[self.row][self.col] = temp
-                if self.check_puzzle_in_path(m):
+                # if self.check_puzzle_in_path(m):
+                #     continue
+
+                if self.check_puzzle_in_closed(m,closedlist):
                     continue
+
                 ns = MyClass(m,self.g+1)
                 ns.prev = self
                 children.append(ns)
@@ -85,7 +91,13 @@ class MyClass:
             state = state.prev
 
         return False
-    
+
+    def check_puzzle_in_closed(self, m, closedlist):
+        # for x in closedlist:
+        #     if x == m:
+        #         return True
+
+        return matrixtostring(m) in closedlist
 
     def get_manhattan(self):
         state = self.puzzle
@@ -105,12 +117,6 @@ class MyClass:
             self.finish = True
         return msum
 
-    def find_empty(self):
-        for i in range(len(self.puzzle)):
-            for j in range(len(self.puzzle[i])):
-                if self.puzzle[i][j] == 0:
-                    return i, j
-    
     def get_rowcoldif(self):
         state = self.puzzle
         distances = [[0,0,0] for i in range(3)]
@@ -150,13 +156,22 @@ class MyClass:
         state.print()
         
         print("Tree depth: ", self.g)
+    
+def matrixtostring(matrix):
+    s ='' 
+    for i in range(len(matrix)):
+        for j in range(len(matrix)):
+            s += (str(matrix[i][j]))
+    
+    return s
+
 
 
 def get_next(openlist):
     best = openlist[0]
     bestv = best.f()
     for x in openlist:
-        if x.f() < best.f():
+        if x.f() < bestv:
             best = x
             bestv = x.f()
     return best
@@ -174,10 +189,12 @@ for k in range(100):
     np = generate_puzzle()
     puzzles.append(np)
 
+dummy = 0
+
 
 for p in puzzles:
     results = []
-    # print(p)
+    print(p)
     for algo in algoList:
         # S = MyClass([[1,2,5],[6,3,0],[4,7,8]],0)
         #S = MyClass([[1,2,3],[4,5,0],[6,7,8]],0) #13 steps to goal
@@ -186,28 +203,36 @@ for p in puzzles:
         goal = [[1,2,3],[4,5,6],[7,8,0]]
         dicts = create_dict(goal)
 
-        openl = [S]
+        openl = [(S.f(),dummy,S)]
+        dummy += 1
+        closedlist = {} 
 
-        for i in range(10000):
+        for i in range(100000):
             # print(i)
             if S.finish == True:
                 # print("Goal!!")
                 break
-            openl.remove(S)
+            # openl.remove(S)
+            closedlist[matrixtostring(S.puzzle)] = 1
             children = S.get_children()
-            openl.extend(children)
+            # openl.extend(children)
+            for x in children:
+                heapq.heappush(openl,(x.f(),dummy,x))
+                dummy += 1
 
-            nextNode = get_next(openl)
-            S = nextNode
+
+            S = heapq.heappop(openl)[2]
+            # nextNode = get_next(openl)
 
         # S.print_path()
-        # print(i)
+        print(i)
+        print(S.g)
         results.append(i)
         # if i > 1:
         #     break
 
-    output = str(p)
-    for x in results:
-        output += "," + str(x)
-    print(output)
+    # output = str(p)
+    # for x in results:
+    #     output += "," + str(x)
+    # print(output)
 
