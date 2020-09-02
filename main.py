@@ -1,5 +1,6 @@
 from puzzlegen import generate_puzzle
 import heapq
+import time
 
 # algo = 1 #manhattan
 # algo = 2 #RowCOl-dist
@@ -185,7 +186,7 @@ def create_dict(gs):
     return mydict
 
 puzzles = []
-for k in range(100):
+for k in range(100000):
     np = generate_puzzle()
     puzzles.append(np)
 
@@ -194,7 +195,9 @@ dummy = 0
 
 for p in puzzles:
     results = []
-    print(p)
+    deepness = []
+    times = []
+    # print(p)
     for algo in algoList:
         # S = MyClass([[1,2,5],[6,3,0],[4,7,8]],0)
         #S = MyClass([[1,2,3],[4,5,0],[6,7,8]],0) #13 steps to goal
@@ -207,8 +210,10 @@ for p in puzzles:
         dummy += 1
         closedlist = {} 
 
-        for i in range(100000):
+        start = time.time()
+        for i in range(190000):
             # print(i)
+
             if S.finish == True:
                 # print("Goal!!")
                 break
@@ -222,17 +227,28 @@ for p in puzzles:
 
 
             S = heapq.heappop(openl)[2]
-            # nextNode = get_next(openl)
+
+        end = time.time()
 
         # S.print_path()
-        print(i)
-        print(S.g)
+        # print(i)
+        # print(S.g)
+        alltime = end - start
+        times.append(alltime)
         results.append(i)
-        # if i > 1:
-        #     break
+        deepness.append(S.g)
+        if i > 179997:
+            results.append(i)
+            if algo == 1:
+                results.append(i)
 
-    # output = str(p)
-    # for x in results:
-    #     output += "," + str(x)
-    # print(output)
+            break
+
+    output = str(p)
+    output += ","+str(deepness[0])
+    for x in results:
+        output += "," + str(x)
+    for x in times:
+        output += "," + "{:.2f}".format(x)
+    print(output)
 
